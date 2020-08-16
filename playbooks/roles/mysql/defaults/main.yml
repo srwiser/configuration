@@ -1,20 +1,8 @@
 ---
-<<<<<<< HEAD
-remove_experimental_mysql: false
-
-mysql_debian_pkgs:
-  - "mysql-server-5.6"
-  - python-mysqldb
-
-mysql_dir: /etc/mysql
-
-DEFAULT_MYSQL_CHARACTER_SET: utf8
-DEFAULT_MYSQL_COLLATION: utf8_general_ci
-=======
 
 MYSQL_USER_HOST: localhost
 MYSQL_LOGIN_USER: ''
 MYSQL_LOGIN_PASSWORD: ''
 MYSQL_LOGIN_HOST: localhost
 MYSQL_LOGIN_PORT: 3306
->>>>>>> d6331c8df... use modified version of mysql role instead of edxlocal
+
