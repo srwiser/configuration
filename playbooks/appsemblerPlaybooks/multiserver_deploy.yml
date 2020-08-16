@@ -1,0 +1,135 @@
+---
+
+# Example sandbox configuration
+# for single server community
+# installs
+
+- name: Configure mongo
+  hosts: "mongo-server"
+  sudo: True
+  gather_facts: True
+  roles:
+  - mongo
+
+- name: Configure mysql
+  hosts: "mysql-server"
+  sudo: True
+  gather_facts: True
+  vars_files:
+  - roles/edxlocal/defaults/main.yml
+  - roles/edxapp/defaults/main.yml
+  - roles/xqueue/defaults/main.yml
+  - roles/ora/defaults/main.yml
+  - roles/analytics_api/defaults/main.yml
+  roles:
+  - mysql
+  - memcached
+
+- name: Configure mysql master
+  hosts: "mysql-master-server"
+  sudo: True
+  gather_facts: True
+  vars_files:
+  - roles/edxlocal/defaults/main.yml
+  - roles/edxapp/defaults/main.yml
+  - roles/xqueue/defaults/main.yml
+  - roles/ora/defaults/main.yml
+  - roles/analytics_api/defaults/main.yml
+  vars:
+  - EDXLOCAL_REPL_ROLE: "master"
+  - EDXLOCAL_REPL_MASTER_HOST: "mysql-master"
+  - EDXLOCAL_BIND_IP: "0.0.0.0"
+  - EDXLOCAL_USER_HOST: "%"
+  roles:
+  - edxlocal_repl
+  - memcached
+
+- name: Configure mysql slave
+  hosts: "mysql-slave-server"
+  sudo: True
+  gather_facts: True
+  vars_files:
+  - roles/edxlocal/defaults/main.yml
+  - roles/edxapp/defaults/main.yml
+  - roles/xqueue/defaults/main.yml
+  - roles/ora/defaults/main.yml
+  - roles/analytics_api/defaults/main.yml
+  vars:
+  - EDXLOCAL_REPL_ROLE: "slave"
+  - EDXLOCAL_REPL_MASTER_HOST: "mysql-master"
+  roles:
+  - edxlocal_repl
+  - memcached
+
+- name: Configure instance(s)
+  hosts: "edxapp-primary-server"
+  sudo: True
+  gather_facts: True
+  vars:
+    migrate_db: "yes"
+    openid_workaround: True
+    EDXAPP_LMS_NGINX_PORT: '80'
+  roles:
+    - role: nginx
+      nginx_sites:
+      - cms
+      - lms
+      - forum
+      - ora
+      - xqueue
+      nginx_default_sites:
+      - lms
+    - { role: 'edxapp', celery_worker: True }
+    - edxapp
+    - demo
+    - { role: 'rabbitmq', rabbitmq_ip: '127.0.0.1' }
+    - oraclejdk
+    - elasticsearch
+    - forum
+    - { role: "xqueue", update_users: True }
+    - ora
+    - certs
+    - edx_ansible
+    - role: datadog
+      when: COMMON_ENABLE_DATADOG
+    - role: splunkforwarder
+      when: COMMON_ENABLE_SPLUNKFORWARDER
+    - role: newrelic
+      when: COMMON_ENABLE_NEWRELIC
+
+- name: Configure instance(s)
+  hosts: "edxapp-additional-server"
+  sudo: True
+  gather_facts: True
+  vars:
+    migrate_db: "no"
+    openid_workaround: True
+    EDXAPP_LMS_NGINX_PORT: '80'
+  roles:
+    - role: nginx
+      nginx_sites:
+      - cms
+      - lms
+      - forum
+      - ora
+      - xqueue
+      nginx_default_sites:
+      - lms
+    - { role: 'edxapp', celery_worker: True }
+    - edxapp
+    - demo
+    - { role: 'rabbitmq', rabbitmq_ip: '127.0.0.1' }
+    - oraclejdk
+    - elasticsearch
+    - forum
+    - { role: "xqueue", update_users: True }
+    - ora
+    - certs
+    - edx_ansible
+    - role: datadog
+      when: COMMON_ENABLE_DATADOG
+    - role: splunkforwarder
+      when: COMMON_ENABLE_SPLUNKFORWARDER
+    - role: newrelic
+      when: COMMON_ENABLE_NEWRELIC
+
